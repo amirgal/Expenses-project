@@ -3,13 +3,27 @@ const router = express.Router()
 const moment = require('moment')
 const Expense = require('../models/Expense')
 
+
 router.get('/expenses', function(req,res) {
-    Expense.find({}).sort({date:-1}).exec(function(err,expenses){
-        res.send(expenses)
-    })
+    let {d1,d2} = req.query
+    if(d1) {
+        d2 ? d2 = moment(d2).format('LLLL') : d2 = moment().format('LLLL')
+        d1 = moment(d1).format('LLLL')
+        Expense.find({
+            $and:[
+                {date:{'$gt':d1}},
+                {date:{'$lt':d2}}
+            ]
+        }).sort({date:-1}).exec(function(err,expenses) {
+            res.send(expenses)
+        })
+    } else {
+        Expense.find({}).sort({date:-1}).exec(function(err,expenses){
+            res.send(expenses)
+        })
+    }
 })
 
-//Need to add a promise then log the item and price 
 router.post('/new',function(req,res) {
     const exp = req.body
     const newExp = new Expense({item:exp.item, amount: exp.amount, group: exp.group, date: exp.date ? moment(exp.date).format('LLLL') : moment().format('LLLL')})
@@ -49,9 +63,7 @@ router.get('/expenses/:group', function(req,res) {
     }
 })
 
-router.get('/expenses', function(req,res) {
 
-})
 
 
 module.exports = router
